@@ -6,7 +6,7 @@ import {
   ScanCommand,
   UpdateCommand,
 } from "@aws-sdk/lib-dynamodb";
-import { docClient, TABLE_NAME } from "./db.js";
+import { getDocClient, getTableName } from "./db.js";
 
 let driver = "dynamodb";
 const memoryTodos = [];
@@ -26,7 +26,7 @@ export async function listTodos() {
     );
   }
 
-  const result = await docClient.send(new ScanCommand({ TableName: TABLE_NAME }));
+    const result = await getDocClient().send(new ScanCommand({ TableName: getTableName() }));
   return (result.Items || []).sort(
     (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
   );
@@ -45,7 +45,7 @@ export async function createTodo(title) {
     return todo;
   }
 
-  await docClient.send(new PutCommand({ TableName: TABLE_NAME, Item: todo }));
+  await getDocClient().send(new PutCommand({ TableName: getTableName(), Item: todo }));
   return todo;
 }
 
@@ -75,9 +75,9 @@ export async function updateTodo(id, body) {
     return updated;
   }
 
-  const result = await docClient.send(
+  const result = await getDocClient().send(
     new UpdateCommand({
-      TableName: TABLE_NAME,
+      TableName: getTableName(),
       Key: { id },
       UpdateExpression: "SET title = :title, completed = :completed, updatedAt = :updatedAt",
       ExpressionAttributeValues: {
@@ -102,7 +102,7 @@ export async function deleteTodo(id) {
     return true;
   }
 
-  await docClient.send(new DeleteCommand({ TableName: TABLE_NAME, Key: { id } }));
+  await getDocClient().send(new DeleteCommand({ TableName: getTableName(), Key: { id } }));
   return true;
 }
 
@@ -111,8 +111,8 @@ async function getTodo(id) {
     return memoryTodos.find((item) => item.id === id) || null;
   }
 
-  const existing = await docClient.send(
-    new GetCommand({ TableName: TABLE_NAME, Key: { id } })
+  const existing = await getDocClient().send(
+    new GetCommand({ TableName: getTableName(), Key: { id } })
   );
   return existing.Item || null;
 }

@@ -4,16 +4,18 @@ import {
   ResourceNotFoundException,
   waitUntilTableExists,
 } from "@aws-sdk/client-dynamodb";
-import { dynamoClient, TABLE_NAME } from "./db.js";
+import { getDynamoClient, getTableName } from "./db.js";
 
 /**
- * Creates the Todos table in AWS if it does not already exist.
- * Needs dynamodb:DescribeTable and dynamodb:CreateTable. PAY_PER_REQUEST
- * avoids having to pick provisioned read/write capacity.
+ * Creates the todo table in AWS if it does not already exist.
+ * PAY_PER_REQUEST avoids having to pick provisioned read/write capacity.
  */
 export async function ensureTable() {
+  const tableName = getTableName();
+  const dynamoClient = getDynamoClient();
+
   try {
-    await dynamoClient.send(new DescribeTableCommand({ TableName: TABLE_NAME }));
+    await dynamoClient.send(new DescribeTableCommand({ TableName: tableName }));
     return;
   } catch (err) {
     if (!(err instanceof ResourceNotFoundException) && err.name !== "ResourceNotFoundException") {
@@ -23,7 +25,7 @@ export async function ensureTable() {
 
   await dynamoClient.send(
     new CreateTableCommand({
-      TableName: TABLE_NAME,
+      TableName: tableName,
       AttributeDefinitions: [{ AttributeName: "id", AttributeType: "S" }],
       KeySchema: [{ AttributeName: "id", KeyType: "HASH" }],
       BillingMode: "PAY_PER_REQUEST",
@@ -32,8 +34,8 @@ export async function ensureTable() {
 
   await waitUntilTableExists(
     { client: dynamoClient, maxWaitTime: 30 },
-    { TableName: TABLE_NAME }
+    { TableName: tableName }
   );
 
-  console.log(`Created DynamoDB table "${TABLE_NAME}"`);
+  console.log(`Created DynamoDB table "${tableName}"`);
 }

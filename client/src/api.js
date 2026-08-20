@@ -1,4 +1,4 @@
-const API = "/api/todos";
+const API = `${import.meta.env.VITE_API_URL || ""}/api/todos`;
 
 async function request(url, options) {
   const response = await fetch(url, {
