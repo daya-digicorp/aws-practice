@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { createTodo, deleteTodo, getTodos, updateTodo } from "./api.js";
+import { createTodo, deleteTodo, getTodos, initApi, updateTodo } from "./api.js";
 
 function remainingLabel(count) {
   if (count === 0) return "All caught up";
@@ -27,7 +27,7 @@ export default function App() {
   }
 
   useEffect(() => {
-    loadTodos();
+    initApi().then(loadTodos);
   }, []);
 
   const remaining = useMemo(
